@@ -14,6 +14,25 @@ strcpy(char *s, const char *t)
   return os;
 }
 
+/**
+ * @brief compare p and q up to size letters
+ * 
+ * @param p 
+ * @param q 
+ * @param size 
+ * @return 0 if p and q have same strings, otherwise 1
+ */
+int
+strncmp(const char *p, const char *q, const int size)
+{
+  for(int i = 0; i < size; i++) {
+    if (*p != *q) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 int
 strcmp(const char *p, const char *q)
 {

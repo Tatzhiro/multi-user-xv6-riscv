@@ -5,16 +5,21 @@
 
 #define MAX_BUFFER_SIZE 100
 #define HASH_LENGTH 32
+#define SALT_LENGTH 18
+
+//文字列にソルトを追加
+void addSalt(char buf[MAX_BUFFER_SIZE], char salt[SALT_LENGTH]) {
+  for(int i = 0; i < SALT_LENGTH; i++){
+    buf[strlen(buf)-1 + i] = salt[i];
+  }
+}
 
 void setPassword(int fd) { //パスワードの設定
-
 
   char newPassword[MAX_BUFFER_SIZE];
   char confirmedPassword[MAX_BUFFER_SIZE];
   char user_name[MAX_BUFFER_SIZE];
-  char salt[] = {"00000000000000000\n"};
-  char buf[MAX_BUFFER_SIZE];
-  int i;
+  char salt[SALT_LENGTH] = {"00000000000000000"}; 
 
   // user名を設定
   write(1, "Enter New Username : ", 22);
@@ -33,24 +38,20 @@ void setPassword(int fd) { //パスワードの設定
 
     
     //文字列にソルトを追加
-    for(i = 0; i<strlen(salt); i++){
-       confirmedPassword[strlen(confirmedPassword)-1 + i] = salt[i];
-    }
+    addSalt(confirmedPassword, salt);
 
-    char password_hash[33] ={};
+    char password_hash[HASH_LENGTH];
     getmd5(confirmedPassword, strlen(confirmedPassword), password_hash);
-    password_hash[32] = '\n';
 
-    //ファイルにuser:passwordを格納(1行、max_buffer_size)
+    //ファイルにuser:salt:passwordを格納
+    // TODO: 1行をMAX_BUFFER_SIZEと保証したい、またはreadで読むサイズ以下にしたい
     write(fd, user_name , strlen(user_name));
     write(fd, ":", 1);
-    write(fd, password_hash, MAX_BUFFER_SIZE - strlen(user_name)-1); // Passwordsファイルの一行の長さをMAX_BUFFER_SIZEにするため
+    write(fd, salt, SALT_LENGTH);
+    write(fd, ":", 1);
+    write(fd, password_hash, HASH_LENGTH);
+    write(fd, "\n", 1);
     close(fd);
-
-    int fd = open("Passwords", O_RDONLY);
-    read(fd, buf, MAX_BUFFER_SIZE);
-    close(fd);
-
     
     return;
   }

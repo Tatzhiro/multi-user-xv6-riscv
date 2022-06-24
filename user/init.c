@@ -18,11 +18,11 @@ char *argv[] = { "sh", 0 };
 
 void login() { //パスワードの入力と、照合
 
-  int i, j;
+  int i, j, k;
   char input_user[MAX_BUFFER_SIZE]= {};
   char input_password[MAX_BUFFER_SIZE]={}; 
-  char user_passPair[MAX_BUFFER_SIZE]= {};
-  char salt[] = {"00000000000000000\n"};
+  char user_pass_salt_triplet[MAX_BUFFER_SIZE]= {};
+  char salt[SALT_LENGTH] = {};
 
   
 
@@ -38,47 +38,43 @@ void login() { //パスワードの入力と、照合
   input_user[strlen(input_user)-1] = 0; //input_userの語尾の改行を消す。
 
 
-  while(read(fd, user_passPair, MAX_BUFFER_SIZE)){
+  while(read(fd, user_pass_salt_triplet, MAX_BUFFER_SIZE)){
 
 
-    char preserved_user[MAX_BUFFER_SIZE] = {};
-    char preserved_password[MAX_BUFFER_SIZE] ={};
+    char saved_user[MAX_BUFFER_SIZE] = {};
+    char saved_password[MAX_BUFFER_SIZE] ={};
     
-    //Passwordsファイルからuserとpasswordを抽出。
-    for(i = 0; user_passPair[i] != ':'; i++){
-      preserved_user[i] = user_passPair[i];
-    }
-    
-    for(j = 0; user_passPair[j+i+1] != 0; j++){//ハッシュ関数の0は'0'なのでOK
-      preserved_password[j] = user_passPair[j+i+1];
-    }
-    
-    if(strcmp(input_user, preserved_user) == 0){
-
-      write(1, "Enter Password : ", 18);
-      gets(input_password, MAX_BUFFER_SIZE);
-
-      //文字列にソルトを追加
-      for(i = 0; i<strlen(salt); i++){
-        input_password[strlen(input_password)-1 + i] = salt[i];
+      //Passwordsファイルからuserとsaltとpasswordを抽出。
+    { 
+      for(i = 0; user_pass_salt_triplet[i] != ':'; i++){
+        saved_user[i] = user_pass_salt_triplet[i];
       }
+      i++; // ':'を飛び越える
 
+      for(j = 0; user_pass_salt_triplet[j+i] != ':'; j++){
+        salt[j] = user_pass_salt_triplet[j+i];
+      }
+      j++; // ':'を飛び越える
 
-      char password_hash[33] = {};
-      getmd5(input_password, strlen(input_password), password_hash);
-      password_hash[32] = '\n'; //語尾を改行にする理由は、write(password_hash)を行い、user_passが改行されて格納されたいから。
+      for(k = 0; user_pass_salt_triplet[k+j+i] != '\n'; k++){
+        saved_password[k] = user_pass_salt_triplet[k+j+i];
+      }
+    }
 
-      while(strcmp(preserved_password, password_hash) != 0) { // incorrect password
-        write(1, "Incorrect Password.\nPlease enter correct Password : ", 53);
+    if(strncmp(input_user, saved_user, i - 1) == 0){
+      while (1) {
+        write(1, "Enter Password : ", 18);
         gets(input_password, MAX_BUFFER_SIZE);
-        input_password[strlen(input_password) -1] = 0;
-        getmd5(input_password, strlen(input_password), password_hash);
-        password_hash[32] = '\n';
-      }
 
-      if (strcmp(preserved_password, password_hash) == 0) { // correct password
-        write(1, "Logging in...\n\n", 16); 
+        addSalt(input_password, salt);
+
+        char password_hash[HASH_LENGTH] = {};
+        getmd5(input_password, strlen(input_password), password_hash);
+        if (strncmp(saved_password, password_hash, HASH_LENGTH) == 0) break;
+        write(1, "Incorrect Password.\n", 21);
       }
+      
+      write(1, "Logging in...\n\n", 16); // correct password
       close(fd);
       return;
     }
