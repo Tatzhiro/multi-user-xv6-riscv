@@ -6,10 +6,6 @@
 #define MAX_BUFFER_SIZE 100
 #define HASH_LENGTH 32
 
-
-
-
-
 void setPassword(int fd) { //パスワードの設定
 
 

@@ -17,9 +17,8 @@ int main(void){
     while(read(fd, buf, sizeof(buf))){};
     
     setPassword(fd);
-    
-    close(fd);
 
     exit(0); 
 
 }
+

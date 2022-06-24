@@ -126,5 +126,5 @@ int main(void){
     loop_count++;
   }
   printf("user is not found\n");
-  return 0;
+  exit(1);
 }
