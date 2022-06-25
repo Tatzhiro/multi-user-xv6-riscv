@@ -50,21 +50,15 @@ void login() { //パスワードの入力と、照合
         saved_user[i] = user_salt_pass_triplet[i];
       }
       i++; // ':'を飛び越える
-      write(1, saved_user, i - 1);
-      write(1, "\n", 1);
 
       for(j = 0; user_salt_pass_triplet[j+i] != ':'; j++){
         salt[j] = user_salt_pass_triplet[j+i];
       }
       j++; // ':'を飛び越える
-      write(1, salt, SALT_LENGTH);
-      write(1, "\n", 1);
 
       for(k = 0; user_salt_pass_triplet[k+j+i] != '\n'; k++){
         saved_password[k] = user_salt_pass_triplet[k+j+i];
       }
-      write(1, saved_password, HASH_LENGTH);
-      write(1, "\n", 1);
     }
 
     if(strncmp(input_user, saved_user, strlen(input_user)) == 0){
