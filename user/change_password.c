@@ -100,7 +100,7 @@ int main(void){
           write(1, "You Can Change Password\n", 31);
 
           //新しいソルトを生成して、パスワードに付与する。
-          //genSalt(salt, SALT_LENGTH);
+          genSalt(salt, SALT_LENGTH, strlen(confirmedPassword));
           addSalt(confirmedPassword, salt);
 
           char password_hash[HASH_LENGTH] ={};
@@ -113,7 +113,7 @@ int main(void){
           write(fd, ":", 1);
           write(fd, password_hash, HASH_LENGTH);
           write(fd, "\n", 1);
-          for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - strlen(saved_user) - 3; i++) {
+          for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - user_name_length - 3; i++) {
             write(fd, "", 1);
           }
           close(fd);

@@ -20,12 +20,14 @@ void setPassword(int fd) { //パスワードの設定
   char newPassword[MAX_BUFFER_SIZE];
   char confirmedPassword[MAX_BUFFER_SIZE];
   char user_name[MAX_BUFFER_SIZE];
+  int user_name_length;
   char salt[SALT_LENGTH] = {}; 
 
   // user名を設定
   write(1, "Enter New Username : ", 22);
   gets(user_name, MAX_BUFFER_SIZE);
-  user_name[strlen(user_name)-1] = 0; //改行を消す
+  user_name_length = strlen(user_name);
+  user_name[user_name_length - 1] = 0; //改行を消す
 
   // prompt to enter password
   write(1, "Enter New Password : ", 22);
@@ -37,8 +39,8 @@ void setPassword(int fd) { //パスワードの設定
   if (strcmp(newPassword, confirmedPassword) == 0) { // passwords match, proceed
     write(1, "Password Is Set Successfully \n", 31);
 
-    
-    genSalt(salt, SALT_LENGTH);
+    //genSaltの最後の引数にseedを加えることによって、userごとに違うソルトを持てるように変更を加えた。
+    genSalt(salt, SALT_LENGTH, strlen(confirmedPassword));
     //文字列にソルトを追加
     addSalt(confirmedPassword, salt);
 
@@ -47,13 +49,13 @@ void setPassword(int fd) { //パスワードの設定
 
     //ファイルにuser:salt:passwordを格納
     // TODO: 1行をMAX_BUFFER_SIZEと保証したい、またはreadで読むサイズ以下にしたい
-    write(fd, user_name , strlen(user_name));
+    write(fd, user_name , user_name_length);
     write(fd, ":", 1);
     write(fd, salt, SALT_LENGTH);
     write(fd, ":", 1);
     write(fd, password_hash, HASH_LENGTH);
     write(fd, "\n", 1);
-    for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - strlen(user_name) - 3; i++) {
+    for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - user_name_length - 3; i++) {
       write(fd, "", 1);
     }
     close(fd);
