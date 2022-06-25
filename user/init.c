@@ -39,7 +39,6 @@ void login() { //パスワードの入力と、照合
   input_user[strlen(input_user)-1] = 0; //input_userの語尾の改行を消す。
 
   while(read(fd, user_salt_pass_triplet, MAX_BUFFER_SIZE)){
-    write(1, "read\n", 6);
 
     char saved_user[MAX_BUFFER_SIZE] = {};
     char saved_password[MAX_BUFFER_SIZE] ={};
