@@ -14,7 +14,7 @@ int main(void){
   int i, j, k;
   char input_user[MAX_BUFFER_SIZE]= {};
   char input_password[MAX_BUFFER_SIZE]={};
-  char user_pass_salt_triplet[MAX_BUFFER_SIZE]= {};
+  char user_salt_pass_triplet[MAX_BUFFER_SIZE]= {};
   char read_buf[MAX_BUFFER_SIZE] = {};
   int loop_count = 0;
   char newPassword[MAX_BUFFER_SIZE];
@@ -36,7 +36,7 @@ int main(void){
   input_user[user_name_length - 1] = 0; //input_userの語尾の改行を消す。
 
 
-  while(read(fd, user_pass_salt_triplet, MAX_BUFFER_SIZE)){
+  while(read(fd, user_salt_pass_triplet, MAX_BUFFER_SIZE)){
 
 
     char saved_user[MAX_BUFFER_SIZE] = {};
@@ -44,22 +44,22 @@ int main(void){
 
     //Passwordsファイルからuserとsaltとpasswordを抽出。
     {
-      for(i = 0; user_pass_salt_triplet[i] != ':'; i++){
-        saved_user[i] = user_pass_salt_triplet[i];
+      for(i = 0; user_salt_pass_triplet[i] != ':'; i++){
+        saved_user[i] = user_salt_pass_triplet[i];
       }
       i++; // ':'を飛び越える
 
-      for(j = 0; user_pass_salt_triplet[j+i] != ':'; j++){
-        salt[j] = user_pass_salt_triplet[j+i];
+      for(j = 0; user_salt_pass_triplet[j+i] != ':'; j++){
+        salt[j] = user_salt_pass_triplet[j+i];
       }
       j++; // ':'を飛び越える
 
-      for(k = 0; user_pass_salt_triplet[k+j+i] != '\n'; k++){
-        saved_password[k] = user_pass_salt_triplet[k+j+i];
+      for(k = 0; user_salt_pass_triplet[k+j+i] != '\n'; k++){
+        saved_password[k] = user_salt_pass_triplet[k+j+i];
       }
     }
 
-    if(strncmp(input_user, saved_user, user_name_length) == 0){ //ユーザ名と保存された名前が等しい場合
+    if(strlen(saved_user) == strlen(input_user) && strncmp(input_user, saved_user, user_name_length) == 0){ //ユーザ名と保存された名前が等しい場合
 
       write(1, "Enter Password : ", 18);
       gets(input_password, MAX_BUFFER_SIZE);

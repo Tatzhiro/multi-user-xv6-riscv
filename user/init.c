@@ -59,7 +59,7 @@ void login() { //パスワードの入力と、照合
       }
     }
 
-    if(strncmp(input_user, saved_user, strlen(saved_user)) == 0){
+    if(strlen(saved_user) == strlen(input_user) && strncmp(input_user, saved_user, strlen(saved_user)) == 0){
       while (1) {
         write(1, "Enter Password : ", 18);
         char input_password[MAX_BUFFER_SIZE]={};   //input_passwordは繰り返しのたびに初期化しないと、前のpasswordが残っている。
