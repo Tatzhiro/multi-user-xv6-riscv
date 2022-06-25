@@ -20,8 +20,7 @@ char *argv[] = { "sh", 0 };
 void login() { //パスワードの入力と、照合
 
   int i, j, k;
-  char input_user[MAX_BUFFER_SIZE]= {};
-  char input_password[MAX_BUFFER_SIZE]={}; 
+  char input_user[MAX_BUFFER_SIZE]= {}; 
   char user_salt_pass_triplet[MAX_BUFFER_SIZE]= {};
   char salt[SALT_LENGTH] = {};
 
@@ -60,17 +59,20 @@ void login() { //パスワードの入力と、照合
       }
     }
 
-    if(strncmp(input_user, saved_user, strlen(input_user)) == 0){
+    if(strncmp(input_user, saved_user, strlen(saved_user)) == 0){
       while (1) {
         write(1, "Enter Password : ", 18);
+        char input_password[MAX_BUFFER_SIZE]={};   //input_passwordは繰り返しのたびに初期化しないと、前のpasswordが残っている。
         gets(input_password, MAX_BUFFER_SIZE);
 
         addSalt(input_password, salt);
 
         char password_hash[HASH_LENGTH] = {};
         getmd5(input_password, strlen(input_password), password_hash);
+
         if (strncmp(saved_password, password_hash, HASH_LENGTH) == 0) break;
         write(1, "Incorrect Password.\n", 21);
+
       }
       
       write(1, "Logging in...\n\n", 16); // correct password
