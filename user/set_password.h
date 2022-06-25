@@ -52,10 +52,10 @@ void setPassword(int fd) { //パスワードの設定
     write(fd, salt, SALT_LENGTH);
     write(fd, ":", 1);
     write(fd, password_hash, HASH_LENGTH);
+    write(fd, "\n", 1);
     for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - strlen(user_name) - 3; i++) {
       write(fd, "", 1);
     }
-    write(fd, "\n", 1);
     close(fd);
     
     return;

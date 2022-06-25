@@ -29,6 +29,7 @@ strncmp(const char *p, const char *q, const int size)
     if (*p != *q) {
       return 1;
     }
+    p++, q++;  //これが無いと配列の先頭の要素だけを比較すると思います。
   }
   return 0;
 }
