@@ -10,6 +10,7 @@
 #include "kernel/fcntl.h"
 #include "user/set_password.h"
 #include "user/md5.h"
+#include "rand.h"
 
 #define MAX_BUFFER_SIZE 100
 #define HASH_LENGTH 32 
@@ -21,14 +22,14 @@ void login() { //パスワードの入力と、照合
   int i, j, k;
   char input_user[MAX_BUFFER_SIZE]= {};
   char input_password[MAX_BUFFER_SIZE]={}; 
-  char user_pass_salt_triplet[MAX_BUFFER_SIZE]= {};
+  char user_salt_pass_triplet[MAX_BUFFER_SIZE]= {};
   char salt[SALT_LENGTH] = {};
 
   
 
   // open passwords file
   int fd = open("Passwords", O_RDONLY);
-  
+
 
   // prompt user for password
   write(1, "Enter Username : ", 18);
@@ -37,31 +38,36 @@ void login() { //パスワードの入力と、照合
 
   input_user[strlen(input_user)-1] = 0; //input_userの語尾の改行を消す。
 
-
-  while(read(fd, user_pass_salt_triplet, MAX_BUFFER_SIZE)){
-
+  while(read(fd, user_salt_pass_triplet, MAX_BUFFER_SIZE)){
+    write(1, "read\n", 6);
 
     char saved_user[MAX_BUFFER_SIZE] = {};
     char saved_password[MAX_BUFFER_SIZE] ={};
     
       //Passwordsファイルからuserとsaltとpasswordを抽出。
     { 
-      for(i = 0; user_pass_salt_triplet[i] != ':'; i++){
-        saved_user[i] = user_pass_salt_triplet[i];
+      for(i = 0; user_salt_pass_triplet[i] != ':'; i++){
+        saved_user[i] = user_salt_pass_triplet[i];
       }
       i++; // ':'を飛び越える
+      write(1, saved_user, i - 1);
+      write(1, "\n", 1);
 
-      for(j = 0; user_pass_salt_triplet[j+i] != ':'; j++){
-        salt[j] = user_pass_salt_triplet[j+i];
+      for(j = 0; user_salt_pass_triplet[j+i] != ':'; j++){
+        salt[j] = user_salt_pass_triplet[j+i];
       }
       j++; // ':'を飛び越える
+      write(1, salt, SALT_LENGTH);
+      write(1, "\n", 1);
 
-      for(k = 0; user_pass_salt_triplet[k+j+i] != '\n'; k++){
-        saved_password[k] = user_pass_salt_triplet[k+j+i];
+      for(k = 0; user_salt_pass_triplet[k+j+i] != '\n'; k++){
+        saved_password[k] = user_salt_pass_triplet[k+j+i];
       }
+      write(1, saved_password, HASH_LENGTH);
+      write(1, "\n", 1);
     }
 
-    if(strncmp(input_user, saved_user, i - 1) == 0){
+    if(strncmp(input_user, saved_user, strlen(input_user)) == 0){
       while (1) {
         write(1, "Enter Password : ", 18);
         gets(input_password, MAX_BUFFER_SIZE);

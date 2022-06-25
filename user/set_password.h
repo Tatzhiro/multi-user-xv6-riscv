@@ -2,6 +2,7 @@
 #include "user/user.h"
 #include "kernel/fcntl.h"
 #include "user/md5.h"
+#include "rand.h"
 
 #define MAX_BUFFER_SIZE 100
 #define HASH_LENGTH 32
@@ -19,7 +20,7 @@ void setPassword(int fd) { //パスワードの設定
   char newPassword[MAX_BUFFER_SIZE];
   char confirmedPassword[MAX_BUFFER_SIZE];
   char user_name[MAX_BUFFER_SIZE];
-  char salt[SALT_LENGTH] = {"00000000000000000"}; 
+  char salt[SALT_LENGTH] = {}; 
 
   // user名を設定
   write(1, "Enter New Username : ", 22);
@@ -37,6 +38,7 @@ void setPassword(int fd) { //パスワードの設定
     write(1, "Password Is Set Successfully \n", 31);
 
     
+    genSalt(salt, SALT_LENGTH);
     //文字列にソルトを追加
     addSalt(confirmedPassword, salt);
 
@@ -50,6 +52,9 @@ void setPassword(int fd) { //パスワードの設定
     write(fd, salt, SALT_LENGTH);
     write(fd, ":", 1);
     write(fd, password_hash, HASH_LENGTH);
+    for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - strlen(user_name) - 3; i++) {
+      write(fd, "", 1);
+    }
     write(fd, "\n", 1);
     close(fd);
     

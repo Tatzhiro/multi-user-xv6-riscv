@@ -122,4 +122,10 @@ long random_at_most(long max) {
   return x/bin_size ;
 }
 
+void genSalt(char* salt, const int size) {
+    for (int i = 0; i < size; i++) {
+        salt[i] = '0' + genrand();
+    }
+}
+
 #endif 
