@@ -4,8 +4,6 @@
 #include "kernel/fcntl.h"
 #include "user/set_password.h"
 
-#define MAX_BUFFER_SIZE 100
-
 int main(void){
     
     char buf[MAX_BUFFER_SIZE] = {};

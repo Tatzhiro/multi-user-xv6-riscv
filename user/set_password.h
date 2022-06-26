@@ -8,11 +8,89 @@
 #define HASH_LENGTH 32
 #define SALT_LENGTH 18
 
-//文字列にソルトを追加
-void addSalt(char buf[MAX_BUFFER_SIZE], char salt[SALT_LENGTH]) {
+void addSalt(char buf[MAX_BUFFER_SIZE], const char salt[SALT_LENGTH]);
+int login();
+void setPassword(int fd);
+
+// bufにソルトを追加
+void addSalt(char buf[MAX_BUFFER_SIZE], const char salt[SALT_LENGTH]) {
   for(int i = 0; i < SALT_LENGTH; i++){
     buf[strlen(buf)-1 + i] = salt[i];
   }
+}
+
+/**
+ * @brief パスワードの入力と、照合
+ * 
+ * @return userの行番号: change_passwordで必要
+ */
+int login() {
+
+  int i, j, k;
+  char input_user[MAX_BUFFER_SIZE]= {}; 
+  char user_salt_pass_triplet[MAX_BUFFER_SIZE]= {};
+  char salt[SALT_LENGTH] = {};
+  int user_row = 0;
+
+  
+
+  // open passwords file
+  int fd = open("Passwords", O_RDONLY);
+
+
+  // prompt user for password
+  write(1, "Enter Username : ", 18);
+  gets(input_user, MAX_BUFFER_SIZE);
+
+
+  input_user[strlen(input_user)-1] = 0; //input_userの語尾の改行を消す。
+
+  while(read(fd, user_salt_pass_triplet, MAX_BUFFER_SIZE)){
+
+    char saved_user[MAX_BUFFER_SIZE] = {};
+    char saved_password[MAX_BUFFER_SIZE] ={};
+    
+      //Passwordsファイルからuserとsaltとpasswordを抽出。
+    { 
+      for(i = 0; user_salt_pass_triplet[i] != ':'; i++){
+        saved_user[i] = user_salt_pass_triplet[i];
+      }
+      i++; // ':'を飛び越える
+
+      for(j = 0; user_salt_pass_triplet[j+i] != ':'; j++){
+        salt[j] = user_salt_pass_triplet[j+i];
+      }
+      j++; // ':'を飛び越える
+
+      for(k = 0; user_salt_pass_triplet[k+j+i] != '\n'; k++){
+        saved_password[k] = user_salt_pass_triplet[k+j+i];
+      }
+    }
+
+    if(strlen(saved_user) == strlen(input_user) && strncmp(input_user, saved_user, strlen(saved_user)) == 0){
+      while (1) {
+        write(1, "Enter Password : ", 18);
+        char input_password[MAX_BUFFER_SIZE]={};   //input_passwordは繰り返しのたびに初期化しないと、前のpasswordが残っている。
+        gets(input_password, MAX_BUFFER_SIZE);
+
+        addSalt(input_password, salt);
+
+        char password_hash[HASH_LENGTH] = {};
+        getmd5(input_password, strlen(input_password), password_hash);
+
+        if (strncmp(saved_password, password_hash, HASH_LENGTH) == 0) break;
+        write(1, "Incorrect Password.\n", 21);
+
+      }
+      
+      close(fd);
+      return user_row;
+    }
+    user_row++;
+  }
+  printf("You Are Not Registered\n");
+  close(fd);
+  return login();
 }
 
 void setPassword(int fd) { //パスワードの設定
@@ -48,7 +126,6 @@ void setPassword(int fd) { //パスワードの設定
     getmd5(confirmedPassword, strlen(confirmedPassword), password_hash);
 
     //ファイルにuser:salt:passwordを格納
-    // TODO: 1行をMAX_BUFFER_SIZEと保証したい、またはreadで読むサイズ以下にしたい
     write(fd, user_name , user_name_length);
     write(fd, ":", 1);
     write(fd, salt, SALT_LENGTH);
@@ -62,10 +139,8 @@ void setPassword(int fd) { //パスワードの設定
     
     return;
   }
-
   else { // passwords do not match
     printf("Passwords Do Not match. Try Again.\n", 36);
     setPassword(fd);
   }
-
 }
