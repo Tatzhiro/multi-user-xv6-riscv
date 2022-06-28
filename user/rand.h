@@ -63,8 +63,9 @@ sgenrand(unsigned long seed)
         mt[mti] = (69069 * mt[mti-1]) & 0xffffffff;
 }
 
+
 long /* for integer generation */
-genrand()
+genrand(unsigned long seed)//seedという引数を追加した。
 {
     unsigned long y;
     static unsigned long mag01[2]={0x0, MATRIX_A};
@@ -74,7 +75,7 @@ genrand()
         int kk;
 
         if (mti == N+1)   /* if sgenrand() has not been called, */
-            sgenrand(4357); /* a default initial seed is used   */
+            sgenrand(seed); /* a default initial seed is used   */
 
         for (kk=0;kk<N-M;kk++) {
             y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
@@ -101,25 +102,11 @@ genrand()
     return (y & RAND_MAX) % 10;
 }
 
-// Assumes 0 <= max <= RAND_MAX
-// Returns in the half-open interval [0, max]
-long random_at_most(long max) {
-  unsigned long
-    // max <= RAND_MAX < ULONG_MAX, so this is okay.
-    num_bins = (unsigned long) max + 1,
-    num_rand = (unsigned long) RAND_MAX + 1,
-    bin_size = num_rand / num_bins,
-    defect   = num_rand % num_bins;
-
-  long x;
-  do {
-   x = genrand();
-  }
-  // This is carefully written not to overflow
-  while (num_rand - defect <= (unsigned long)x);
-
-  // Truncated division is intentional
-  return x/bin_size ;
+void genSalt(char* salt, const int size, unsigned long seed) {
+    for (int i = 0; i < size; i++) {
+        salt[i] = '0' + genrand(seed);
+    }
 }
+
 
 #endif 
