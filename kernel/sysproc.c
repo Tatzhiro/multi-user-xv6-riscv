@@ -24,6 +24,15 @@ sys_getpid(void)
 }
 
 uint64
+sys_setuid(void)
+{
+  int n;
+  if(argint(0, &n) < 0)
+    return -1;
+  return setuid(n);
+}
+
+uint64
 sys_fork(void)
 {
   return fork();
@@ -94,4 +103,10 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_cps(void)
+{
+  return cps();
 }

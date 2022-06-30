@@ -27,6 +27,8 @@ struct inode {
   short nlink;
   uint size;
   uint addrs[NDIRECT+1];
+
+  int owner_uid;
 };
 
 // map major device number to device functions.
