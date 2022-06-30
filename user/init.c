@@ -38,6 +38,7 @@ main(void)
 
   for(;;){
     login();
+    setuid(1); // 例えば、このユーザーのIDを1とする
     write(1, "Logging in...\n\n", 16); // correct password
     printf("init: starting sh\n");
     pid = fork();
