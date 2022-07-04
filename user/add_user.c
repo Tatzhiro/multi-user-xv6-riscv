@@ -6,17 +6,19 @@
 
 int main(void){
     
+    int uid = 1;
     char buf[MAX_BUFFER_SIZE] = {};
 
     printf("Add New User\n");
 
     int fd = open("Passwords", O_RDWR);
 
-    while(read(fd, buf, sizeof(buf))){};
+    while(read(fd, buf, sizeof(buf))){
+        uid++;
+    }; 
     
-    setPassword(fd);
+    setPassword(fd, uid);
 
     exit(0); 
 
 }
-

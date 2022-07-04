@@ -311,6 +311,8 @@ sys_open(void)
     }
     ilock(ip);
     if(ip->owner_uid != myproc()->uid) {
+      printf("%d", ip->owner_uid);
+      printf("%d\n", myproc()->uid);
       iunlockput(ip);
       end_op();
       return -1;

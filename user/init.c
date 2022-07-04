@@ -10,16 +10,16 @@
 #include "kernel/fcntl.h"
 #include "user/set_password.h"
 #include "user/md5.h"
-#include "rand.h"
+#include "rand.h" 
 
 char *argv[] = { "sh", 0 };
 
 int
-main(void)
+main(void) 
 {
   int pid, wpid;
 
-  if(open("console", O_RDWR) < 0){
+  if(open("console", O_RDWR) < 0){ 
     mknod("console", CONSOLE, 0);
     open("console", O_RDWR);
   }
@@ -32,13 +32,12 @@ main(void)
     close(fd);
     write(1, "No Password set.\nPlease set your Password\n", 43);
     fd = open("Passwords", O_CREATE|O_RDWR);
-    setPassword(fd);
+    setPassword(fd, 1);
   }
 
 
   for(;;){
     login();
-    setuid(1); // 例えば、このユーザーのIDを1とする
     write(1, "Logging in...\n\n", 16); // correct password
     printf("init: starting sh\n");
     pid = fork();
