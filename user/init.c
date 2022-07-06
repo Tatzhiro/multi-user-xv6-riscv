@@ -30,9 +30,11 @@ main(void)
   int fd = open("Passwords", O_RDWR);
   if (fd < 0) { // no password
     close(fd);
-    write(1, "No Password set.\nPlease set your Password\n", 43);
+    write(1, "No user\nPlease sign up as root\n", 32);
     fd = open("Passwords", O_CREATE|O_RDWR);
-    setPassword(fd, 1);
+
+    // 最初のユーザーは全権を持つroot
+    setPassword(fd, 0);
   }
 
 

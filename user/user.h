@@ -43,3 +43,11 @@ void free(void*);
 int atoi(const char*);
 int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
+int isdigit(int c);
+int isxdigit(int c);
+int toupper(int c);
+
+// https://hiroyukichishiro.com/ascii-to-numerical-value-in-c-language/#myitoa
+void myxtoa(unsigned long long val, char *str, int base, int negative);
+char* myitoa(int val, char *str, int base);
+

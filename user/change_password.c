@@ -16,7 +16,7 @@ int main(void) {
     printf("Change Password\n");
     int fd = open("Passwords", O_RDWR);
 
-    //既存のuser:passwordに新しいuser_passwordを上書きする。
+    // 既存のuser:passwordに新しいuser_passwordを上書きする。
     // userがあるrowまでfdを合わせる
     for (int i = 0; i < row_count; i++) {
         read(fd, read_buf, MAX_BUFFER_SIZE);

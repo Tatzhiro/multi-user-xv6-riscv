@@ -7,6 +7,7 @@
 #define MAX_BUFFER_SIZE 100
 #define HASH_LENGTH 32
 #define SALT_LENGTH 18
+#define MAX_UID_DIGIT 10
 
 void addSalt(char buf[MAX_BUFFER_SIZE], const char salt[SALT_LENGTH]);
 int login();
@@ -27,7 +28,7 @@ void addSalt(char buf[MAX_BUFFER_SIZE], const char salt[SALT_LENGTH]) {
  */
 int login() {
 
-  int i, j, k;
+  int h, i, j, k;
   char input_user[MAX_BUFFER_SIZE]= {}; 
   char uid_user_salt_pass_quadruple[MAX_BUFFER_SIZE]= {};
   int user_row = 0;
@@ -50,20 +51,23 @@ int login() {
     char saved_password[MAX_BUFFER_SIZE] ={};
 
       //Passwordsファイルからuidとuserとsaltとpasswordを抽出。
-
-    int uid = uid_user_salt_pass_quadruple[0] - '0';
-
-    for(i = 0; uid_user_salt_pass_quadruple[i+2] != ':'; i++){
-      saved_user[i] = uid_user_salt_pass_quadruple[i+2];
+    char str_uid[MAX_UID_DIGIT] = {};
+    for(h = 0; uid_user_salt_pass_quadruple[h] != ':'; h++) {
+      str_uid[h] = uid_user_salt_pass_quadruple[h];
     }
-    i += 3; // ':'を飛び越える
-    for(j = 0; uid_user_salt_pass_quadruple[j+i] != ':'; j++){
-      salt[j] = uid_user_salt_pass_quadruple[j+i];
+    int uid = atoi(str_uid);
+    h++;
+    for(i = 0; uid_user_salt_pass_quadruple[i+h] != ':'; i++){
+      saved_user[i] = uid_user_salt_pass_quadruple[i+h];
+    }
+    i++; // ':'を飛び越える
+    for(j = 0; uid_user_salt_pass_quadruple[j+i+h] != ':'; j++){
+      salt[j] = uid_user_salt_pass_quadruple[j+i+h];
     }
     j++; // ':'を飛び越える
     
-    for(k = 0; uid_user_salt_pass_quadruple[k+j+i] != '\n'; k++){
-      saved_password[k] = uid_user_salt_pass_quadruple[k+j+i];
+    for(k = 0; uid_user_salt_pass_quadruple[k+j+i+h] != '\n'; k++){
+      saved_password[k] = uid_user_salt_pass_quadruple[k+j+i+h];
     }
 
     if(strlen(saved_user) == strlen(input_user) && strncmp(input_user, saved_user, strlen(saved_user)) == 0){
@@ -97,13 +101,17 @@ int login() {
 
 void setPassword(int fd, int uid) { //パスワードの設定
 
-  char save_uid[] = {}; //char saltの隣に置くとバグる
+  char save_uid[MAX_UID_DIGIT] = {}; //char saltの隣に置くとバグる
   char newPassword[MAX_BUFFER_SIZE];
   char confirmedPassword[MAX_BUFFER_SIZE];
   char user_name[MAX_BUFFER_SIZE];
+  int uid_length;
   int user_name_length;
   char salt[SALT_LENGTH] = {}; 
-  
+
+  // uidをstringとして抽出
+  myitoa(uid, save_uid, 10);
+  uid_length = strlen(save_uid);
 
   // user名を設定
   write(1, "Enter New Username : ", 22);
@@ -130,8 +138,7 @@ void setPassword(int fd, int uid) { //パスワードの設定
     getmd5(confirmedPassword, strlen(confirmedPassword), password_hash);
 
     //ファイルにuid:user:salt:passwordを格納
-    save_uid[0] = '0' + uid;
-    write(fd, save_uid, 1);
+    write(fd, save_uid, uid_length);
     write(fd, ":", 1);
     write(fd, user_name , user_name_length);
     write(fd, ":", 1);
@@ -139,7 +146,7 @@ void setPassword(int fd, int uid) { //パスワードの設定
     write(fd, ":", 1);
     write(fd, password_hash, HASH_LENGTH);
     write(fd, "\n", 1);
-    for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - user_name_length - 5; i++) {
+    for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - uid_length - user_name_length - 4; i++) {
       write(fd, "", 1);
     }
     close(fd);
