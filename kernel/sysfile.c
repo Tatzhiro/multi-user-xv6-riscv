@@ -310,11 +310,13 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
-    if(ip->owner_uid != myproc()->uid) {
+    if(strncmp(path, ".", 2) != 0 && ip->owner_uid != myproc()->uid) {
+      /*
       if(strncmp(path, "console", 8) != 0) {
         printf("owner_uid = %d\n", ip->owner_uid);
         printf("my_uid    = %d\n", myproc()->uid);
       }
+      */
       iunlockput(ip);
       end_op();
       return -1;
