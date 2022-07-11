@@ -14,10 +14,40 @@
 
 char *argv[] = { "sh", 0 };
 
+void
+makeShell(int uid) {
+  int pid, wpid;
+  pid = fork();
+  if(pid < 0){
+    printf("makeShell: fork failed\n");
+    exit(1);
+  }
+  if(pid == 0){
+    setuid(uid);
+    exec("sh", argv);
+    printf("makeShell: exec sh failed\n");
+    exit(1);
+  }
+  for(;;){
+      // this call to wait() returns if the shell exits,
+      // or if a parentless process exits.
+      wpid = wait((int *) 0);
+      if(wpid == pid){
+        // the shell exited; restart it.
+        write(1, "user logged out\n\n", 18);
+        break;
+      } else if(wpid < 0){
+        printf("init: wait returned an error\n");
+        exit(1);
+      } else {
+        // it was a parentless process; do nothing.
+      }
+  }
+}
+
 int
 main(void) 
 {
-  int pid, wpid;
 
   if(open("console", O_RDWR) < 0){ 
     mknod("console", CONSOLE, 0);
@@ -39,34 +69,11 @@ main(void)
 
 
   for(;;){
-    login();
+    int uid = 0;
+    int null;
+    login(&uid, &null);
     write(1, "Logging in...\n\n", 16); // correct password
     printf("init: starting sh\n");
-    pid = fork();
-    if(pid < 0){
-      printf("init: fork failed\n");
-      exit(1);
-    }
-    if(pid == 0){
-      exec("sh", argv);
-      printf("init: exec sh failed\n");
-      exit(1);
-    }
-
-    for(;;){
-      // this call to wait() returns if the shell exits,
-      // or if a parentless process exits.
-      wpid = wait((int *) 0);
-      if(wpid == pid){
-        // the shell exited; restart it.
-        break;
-      } else if(wpid < 0){
-        printf("init: wait returned an error\n");
-        exit(1);
-      } else {
-        // it was a parentless process; do nothing.
-      }
-    }
+    makeShell(uid);
   }
-
 }

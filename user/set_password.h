@@ -10,7 +10,7 @@
 #define MAX_UID_DIGIT 10
 
 void addSalt(char buf[MAX_BUFFER_SIZE], const char salt[SALT_LENGTH]);
-int login();
+int login(int*, int*);
 void setPassword(int fd, int uid);
 
 // bufにソルトを追加
@@ -26,8 +26,8 @@ void addSalt(char buf[MAX_BUFFER_SIZE], const char salt[SALT_LENGTH]) {
  * 
  * @return userの行番号: change_passwordで必要
  */
-int login() {
-
+int login(int *myuid, int *row_count) {
+  printf("login function\n");
   int h, i, j, k;
   char input_user[MAX_BUFFER_SIZE]= {}; 
   char uid_user_salt_pass_quadruple[MAX_BUFFER_SIZE]= {};
@@ -35,9 +35,13 @@ int login() {
 
   // open passwords file
   int fd = open("Passwords", O_RDONLY);
-
+  if(fd < 0) {
+    printf("LOGIN ERROR: Passwords cannot be opened by non-root user\n");
+    return 1;
+  }
 
   // prompt user for password
+  write(1, "\nPlease login\n", 15);
   write(1, "Enter Username : ", 18);
   gets(input_user, MAX_BUFFER_SIZE);
 
@@ -82,7 +86,7 @@ int login() {
         getmd5(input_password, strlen(input_password), password_hash);
 
         if (strncmp(saved_password, password_hash, HASH_LENGTH) == 0) { 
-          setuid(uid);
+          *myuid = uid;
           break;
         }
         write(1, "Incorrect Password.\n", 21);
@@ -90,13 +94,14 @@ int login() {
       }
       
       close(fd);
-      return user_row;
+      *row_count = user_row;
+      return 0;
     }
     user_row++;
   }
   printf("You Are Not Registered\n");
   close(fd);
-  return login();
+  return login(myuid, row_count);
 }
 
 void setPassword(int fd, int uid) { //パスワードの設定
