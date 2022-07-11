@@ -154,3 +154,109 @@ memcpy(void *dst, const void *src, uint n)
 {
   return memmove(dst, src, n);
 }
+
+int 
+isdigit(int c) {
+  return '0' <= c && c <= '9';
+
+}
+
+int 
+isxdigit(int c)
+{
+  return isdigit(c) || ((c >= 'a') && (c <= 'f')) || ((c >= 'A') && (c <= 'F'));
+}
+
+int 
+toupper(int c)
+{
+	//	英小文字の場合は英大文字へ変換
+	if ((c >= 'a') && (c <= 'z'))
+	{
+		return c - 0x20;
+	}
+
+	return c;
+}
+
+void 
+myxtoa(unsigned long long val, char *str, int base, int negative)
+{
+  char *p;
+  char *firstdig;
+  char temp;
+  unsigned long long digval;
+ 
+  if (base != 0 && !(base >= 2 && base <= 36)) {
+    write(1, "Error: invalid base\n", 21);
+    return;
+  }
+ 
+  p = str;
+ 
+  if (negative) {
+    *p++ = '-';
+    val = (unsigned long long)(-(long long) val);
+  }
+ 
+  if (!base) {
+    base = 10;
+ 
+    if (*str == '0') {
+      base = 8;
+      str++;
+ 
+      if ((toupper(*str) == 'X') && isxdigit(str[1])) {
+        str++;
+        base = 16;
+      }
+    }
+  } else if (base == 16) {
+    if (str[0] == '0' && toupper(str[1]) == 'X') {
+      str += 2;
+    }
+  }
+ 
+  firstdig = p;
+ 
+  do {
+    digval = (unsigned long long)(val % base);
+    val /= base;
+ 
+    if (digval > 9) {
+      *p++ = (char)(digval - 10 + 'a');
+    } else {
+      *p++ = (char)(digval + '0');
+    }
+  } while (val > 0);
+ 
+  *p-- = '\0';
+ 
+  do {
+    temp = *p;
+    *p = *firstdig;
+    *firstdig = temp;
+    p--;
+    firstdig++;
+  } while (firstdig < p);
+}
+
+/**
+ * @brief convert int value to string
+ * 
+ * @param val int value that is to be convereted
+ * @param str converted val is stored here
+ * @param base default should be 10, but base 2, 8, 16 probably should be possible
+ * @return char*
+ */
+char*
+myitoa(int val, char *str, int base)
+{
+  if (base == 10 && val < 0) {
+    myxtoa(val, str, base, 1);
+  } else {
+    myxtoa(val, str, base, 0);
+  }
+ 
+  return str;
+}

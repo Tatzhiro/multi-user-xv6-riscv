@@ -133,7 +133,9 @@ UPROGS=\
 	$U/_wc\
 	$U/_zombie\
 	$U/_add_user\
-	$U/_change_password\
+	$U/_chpw\
+	$U/_ps\
+	$U/_sudo\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

@@ -241,7 +241,7 @@ userinit(void)
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
-
+  p->uid = 0; // root
   p->state = RUNNABLE;
 
   release(&p->lock);
@@ -288,7 +288,7 @@ fork(void)
     return -1;
   }
   np->sz = p->sz;
-
+  np->uid = p->uid;
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
@@ -653,4 +653,29 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+int
+cps(void)
+{
+  struct proc *p;
+
+  acquire(&pid_lock);
+  printf("name \t pid \t uid \t state \t \n");
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if (p->state == SLEEPING) printf("%s \t %d \t %d \t SLEEPING \t \n", p->name, p->pid, p->uid);
+    else if (p->state == RUNNING) printf("%s \t %d \t %d \t RUNNING \t \n", p->name, p->pid, p->uid);
+    else if (p->state == RUNNABLE) printf("%s \t %d \t %d \t RUNNABLE \t \n", p->name, p->pid, p->uid);
+  }
+  release(&pid_lock);
+  return 22;
+}
+
+int
+setuid(int user)
+{
+  struct proc *p = myproc();
+  //if (p->uid != 0) return -1;
+  p->uid = user;
+  return 0;
 }

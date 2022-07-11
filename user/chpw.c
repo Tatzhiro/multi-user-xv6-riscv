@@ -11,12 +11,21 @@ int main(void) {
     char newPassword[MAX_BUFFER_SIZE];
     char confirmedPassword[MAX_BUFFER_SIZE];
     char salt[SALT_LENGTH] = {};
-
-    int row_count = login();
+    int null;
+ 
+    int row_count;
+    if(login(&null, &row_count) != 0) {
+        printf("Change Password failed\n");
+        exit(1);
+    }
     printf("Change Password\n");
     int fd = open("Passwords", O_RDWR);
+    if(fd < 0) {
+        printf("ERROR\n");
+        exit(1);
+    }
 
-    //既存のuser:passwordに新しいuser_passwordを上書きする。
+    // 既存のuser:passwordに新しいuser_passwordを上書きする。
     // userがあるrowまでfdを合わせる
     for (int i = 0; i < row_count; i++) {
         read(fd, read_buf, MAX_BUFFER_SIZE);
@@ -40,21 +49,23 @@ int main(void) {
         getmd5(confirmedPassword, strlen(confirmedPassword), password_hash);
 
         //ファイルにuser:passwordを格納(1行、max_buffer_size)
-        int user_name_length = 0;
+        int clm_length = 0;
+        int column_cnt = 0;
         while(1) {
             read(fd, read_buf, 1);
-            if (read_buf[0] == ':') break;  // user_nameを飛び越える
-            user_name_length++;
+            if (read_buf[0] == ':') column_cnt++;
+            if (column_cnt == 2) break;  // uidとuser_nameを飛び越える
+            clm_length++;
         }
         write(fd, salt, SALT_LENGTH);
         write(fd, ":", 1);
         write(fd, password_hash, HASH_LENGTH);
         write(fd, "\n", 1);
-        for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - user_name_length - 3; i++) {
+        for (int i = 0; i < MAX_BUFFER_SIZE - SALT_LENGTH - HASH_LENGTH - clm_length - 3; i++) {
             write(fd, "", 1);
         }
         close(fd);
-
+        cps();
         exit(0);
     }
     else {

@@ -13,6 +13,13 @@ struct file {
 #define minor(dev)  ((dev) & 0xFFFF)
 #define	mkdev(m,n)  ((uint)((m)<<16| (n)))
 
+#define OwnR (32)
+#define OwnW (16)
+#define OwnX (8)
+#define GrpR (4)
+#define GrpW (2)
+#define GrpX (1)
+
 // in-memory copy of an inode
 struct inode {
   uint dev;           // Device number
@@ -27,6 +34,9 @@ struct inode {
   short nlink;
   uint size;
   uint addrs[NDIRECT+1];
+
+  int owner_uid;
+  char permission;
 };
 
 // map major device number to device functions.

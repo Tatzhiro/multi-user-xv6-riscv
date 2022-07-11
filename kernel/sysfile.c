@@ -265,6 +265,7 @@ create(char *path, short type, short major, short minor)
   ip->major = major;
   ip->minor = minor;
   ip->nlink = 1;
+  ip->owner_uid = myproc()->uid;
   iupdate(ip);
 
   if(type == T_DIR){  // Create . and .. entries.
@@ -309,6 +310,17 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
+    if(strncmp(path, ".", 2) != 0 && ip->owner_uid != myproc()->uid) {
+      /*
+      if(strncmp(path, "console", 8) != 0) {
+        printf("owner_uid = %d\n", ip->owner_uid);
+        printf("my_uid    = %d\n", myproc()->uid);
+      }
+      */
+      iunlockput(ip);
+      end_op();
+      return -1;
+    }
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
       end_op();

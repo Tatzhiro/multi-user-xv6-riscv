@@ -1,8 +1,14 @@
-// Shell.
+// Sudo
 
 #include "kernel/types.h"
+#include "kernel/stat.h"
+#include "kernel/spinlock.h"
+#include "kernel/sleeplock.h"
+#include "kernel/fs.h"
+#include "kernel/file.h"
 #include "user/user.h"
 #include "kernel/fcntl.h"
+#include "user/set_password.h"
 
 // Parsed command representation
 #define EXEC  1
@@ -133,7 +139,7 @@ runcmd(struct cmd *cmd)
 int
 getcmd(char *buf, int nbuf)
 {
-  fprintf(2, "$ ");
+  fprintf(2, "@ ");
   memset(buf, 0, nbuf);
   gets(buf, nbuf);
   if(buf[0] == 0) // EOF
@@ -146,6 +152,8 @@ main(void)
 {
   static char buf[100];
   int fd;
+
+  setuid(0);
 
   // Ensure that three file descriptors are open.
   while((fd = open("console", O_RDWR)) >= 0){
@@ -164,10 +172,11 @@ main(void)
         fprintf(2, "cannot cd %s\n", buf+3);
       continue;
     }
-    if(buf[0] == 'q') break;
-    if(fork1() == 0)
+    if(fork1() == 0){
       runcmd(parsecmd(buf));
+    }
     wait(0);
+    exit(0); //sudoプロセスを終了する
   }
   exit(0);
 }
@@ -183,7 +192,6 @@ int
 fork1(void)
 {
   int pid;
-
   pid = fork();
   if(pid == -1)
     panic("fork");
