@@ -266,7 +266,10 @@ create(char *path, short type, short major, short minor)
   ip->minor = minor;
   ip->nlink = 1;
   ip->owner_uid = myproc()->uid;
-  ip->permission = OwnR | OwnW | OwnX | GrpR | GrpX ;
+  if (strncmp(path, "Passwords", 9) == 0)
+    ip->permission = OwnR | OwnW | OwnX ;
+  else
+    ip->permission = OwnR | OwnW | OwnX | GrpR | GrpX;
 
   iupdate(ip);
 
