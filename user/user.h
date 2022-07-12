@@ -46,6 +46,7 @@ void *memcpy(void *, const void *, uint);
 int isdigit(int c);
 int isxdigit(int c);
 int toupper(int c);
+char* strstr(char*, char*);
 
 // https://hiroyukichishiro.com/ascii-to-numerical-value-in-c-language/#myitoa
 void myxtoa(unsigned long long val, char *str, int base, int negative);

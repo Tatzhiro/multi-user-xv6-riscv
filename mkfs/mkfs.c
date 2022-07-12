@@ -17,6 +17,13 @@
 
 #define NINODES 200
 
+#define OwnR (32)
+#define OwnW (16)
+#define OwnX (8)
+#define GrpR (4)
+#define GrpW (2)
+#define GrpX (1)
+
 // Disk layout:
 // [ boot block | sb block | log | inode blocks | free bit map | data blocks ]
 
@@ -82,7 +89,7 @@ main(int argc, char *argv[])
     exit(1);
   }
 
-  assert(sizeof(struct dinode_padding) == 60);
+  assert(sizeof(struct dinode_padding) == 56);
   assert((BSIZE % sizeof(struct dinode)) == 0);
   assert((BSIZE % sizeof(struct dirent)) == 0);
 
@@ -136,7 +143,7 @@ main(int argc, char *argv[])
       shortname = argv[i] + 5;
     else
       shortname = argv[i];
-    
+
     assert(index(shortname, '/') == 0);
 
     if((fd = open(argv[i], 0)) < 0)
@@ -229,6 +236,7 @@ ialloc(ushort type)
   din.type = xshort(type);
   din.nlink = xshort(1);
   din.size = xint(0);
+  din.permission = OwnR | OwnW | OwnX | GrpR | GrpX ;
   winode(inum, &din);
   return inum;
 }

@@ -16,10 +16,10 @@ strcpy(char *s, const char *t)
 
 /**
  * @brief compare p and q up to size letters
- * 
- * @param p 
- * @param q 
- * @param size 
+ *
+ * @param p
+ * @param q
+ * @param size
  * @return 0 if p and q have same strings, otherwise 1
  */
 int
@@ -155,19 +155,19 @@ memcpy(void *dst, const void *src, uint n)
   return memmove(dst, src, n);
 }
 
-int 
+int
 isdigit(int c) {
   return '0' <= c && c <= '9';
 
 }
 
-int 
+int
 isxdigit(int c)
 {
   return isdigit(c) || ((c >= 'a') && (c <= 'f')) || ((c >= 'A') && (c <= 'F'));
 }
 
-int 
+int
 toupper(int c)
 {
 	//	英小文字の場合は英大文字へ変換
@@ -179,33 +179,33 @@ toupper(int c)
 	return c;
 }
 
-void 
+void
 myxtoa(unsigned long long val, char *str, int base, int negative)
 {
   char *p;
   char *firstdig;
   char temp;
   unsigned long long digval;
- 
+
   if (base != 0 && !(base >= 2 && base <= 36)) {
     write(1, "Error: invalid base\n", 21);
     return;
   }
- 
+
   p = str;
- 
+
   if (negative) {
     *p++ = '-';
     val = (unsigned long long)(-(long long) val);
   }
- 
+
   if (!base) {
     base = 10;
- 
+
     if (*str == '0') {
       base = 8;
       str++;
- 
+
       if ((toupper(*str) == 'X') && isxdigit(str[1])) {
         str++;
         base = 16;
@@ -216,22 +216,22 @@ myxtoa(unsigned long long val, char *str, int base, int negative)
       str += 2;
     }
   }
- 
+
   firstdig = p;
- 
+
   do {
     digval = (unsigned long long)(val % base);
     val /= base;
- 
+
     if (digval > 9) {
       *p++ = (char)(digval - 10 + 'a');
     } else {
       *p++ = (char)(digval + '0');
     }
   } while (val > 0);
- 
+
   *p-- = '\0';
- 
+
   do {
     temp = *p;
     *p = *firstdig;
@@ -243,7 +243,7 @@ myxtoa(unsigned long long val, char *str, int base, int negative)
 
 /**
  * @brief convert int value to string
- * 
+ *
  * @param val int value that is to be convereted
  * @param str converted val is stored here
  * @param base default should be 10, but base 2, 8, 16 probably should be possible
@@ -257,6 +257,26 @@ myitoa(int val, char *str, int base)
   } else {
     myxtoa(val, str, base, 0);
   }
- 
+
   return str;
+}
+
+char* strstr(char *str, char *substr)
+{
+	  while (*str)
+	  {
+		    char *begin = str;
+		    char *pattern = substr;
+
+		    while (*str && *pattern && *str == *pattern)
+			{
+			      str++;
+			      pattern++;
+		    }
+		    if (!*pattern)
+		    	  return begin;
+
+		    str = begin + 1;
+	  }
+	  return 0;
 }
