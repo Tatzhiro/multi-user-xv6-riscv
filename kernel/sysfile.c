@@ -289,14 +289,6 @@ create(char *path, short type, short major, short minor)
   return ip;
 }
 
-#define USER_R_BIT 0
-#define USER_W_BIT 1
-#define USER_X_BIT 2
-#define GRP_R_BIT 3
-#define GRP_W_BIT 4
-#define GRP_X_BIT 5
-
-
 
 uint64
 sys_open(void)
@@ -335,42 +327,33 @@ sys_open(void)
     }
   }
 
-  char bits[6];
   char permission = ip -> permission;
-
-  unsigned int mask = 1U << (5);
-  int i;
-  for (i = 0; i < 6; i++) {
-      bits[i] = (permission & mask) ? 1 : 0;
-      permission <<= 1;
-  }
-
 
   if (omode == O_RDWR) {
 		if (p->uid == ip->owner_uid) {
-			if (!bits[USER_R_BIT] || !bits[USER_W_BIT])
+			if (!(permission & OwnR) || !(permission & OwnW))
 				invalid = 1;
 		}
 		else{
-			if (!bits[GRP_R_BIT] || !bits[GRP_W_BIT])
+			if (!(permission & GrpR) || !(permission & GrpW))
 				invalid = 1;
 		}
 	} else if (omode == O_RDONLY) {
 		if (p->uid == ip->owner_uid) {
-			if (!bits[USER_R_BIT])
+			if (!(permission & OwnR))
 				invalid = 1;
 		}
 		else{
-			if (!bits[GRP_R_BIT])
+			if (!(permission & GrpR))
 				invalid = 1;
 		}
 	} else if (omode == O_WRONLY) {
 		if (p->uid == ip->owner_uid) {
-			if (!bits[USER_W_BIT])
+			if (!(permission & OwnW))
 				invalid = 1;
 		}
 		else {
-			if (!bits[GRP_W_BIT])
+			if (!(permission & GrpW))
 				invalid = 1;
 		}
 	}

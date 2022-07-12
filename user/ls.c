@@ -3,6 +3,13 @@
 #include "user/user.h"
 #include "kernel/fs.h"
 
+#define OwnR (32)
+#define OwnW (16)
+#define OwnX (8)
+#define GrpR (4)
+#define GrpW (2)
+#define GrpX (1)
+
 void printperm(int mode, int dir);
 
 char*
@@ -26,7 +33,7 @@ fmtname(char *path)
 
 void
 ls(char *path)
-{
+{ 
 	char buf[512], *p;
 	int fd;
 	struct dirent de;
@@ -34,7 +41,7 @@ ls(char *path)
 
 	if((fd = open(path, 0)) < 0){
 		fprintf(2, "ls: cannot open %s\n", path);
-		return;
+		return; 
 	}
 
 	if(fstat(fd, &st) < 0){
@@ -56,10 +63,10 @@ ls(char *path)
 		strcpy(buf, path);
 		p = buf+strlen(buf);
 		*p++ = '/';
-		while(read(fd, &de, sizeof(de)) == sizeof(de)){
+		while(read(fd, &de, sizeof(de)) == sizeof(de)){ 
 			if(de.inum == 0)
 				continue;
-			memmove(p, de.name, DIRSIZ);
+			memmove(p, de.name, DIRSIZ); 
 			p[DIRSIZ] = 0;
 			if(stat(buf, &st) < 0){
 				printf("ls: cannot stat %s\n", buf);
@@ -70,16 +77,6 @@ ls(char *path)
 		break;
 	}
 	close(fd);
-}
-
-void int_to_bin_digit(unsigned int in, int count, int* out)
-{
-    unsigned int mask = 1U << (count-1);
-    int i;
-    for (i = 0; i < count; i++) {
-        out[i] = (in & mask) ? 1 : 0;
-        in <<= 1;
-    }
 }
 
 void
@@ -134,23 +131,23 @@ lsl(char *path)
 }
 
 void
-printperm(int permission, int dir)
+printperm(int permission, int dir)  
 {
-	int bits[6];
-	int_to_bin_digit(permission, 6, bits);
+	
+	
 
 	printf("%c", dir ? 'd' : '-');
-	printf("%c", bits[0] ? 'r' : '-');
-	printf("%c", bits[1] ? 'w' : '-');
-	printf("%c", bits[2] ? 'x' : '-');
-	printf("%c", bits[3] ? 'r' : '-');
-	printf("%c", bits[4] ? 'w' : '-');
-	printf("%c", bits[5] ? 'x' : '-');
+	printf("%c", permission & OwnR ? 'r' : '-');
+	printf("%c", permission & OwnW ? 'w' : '-');
+	printf("%c", permission & OwnX ? 'x' : '-');
+	printf("%c", permission & GrpR ? 'r' : '-');
+	printf("%c", permission & GrpW ? 'w' : '-');
+	printf("%c", permission & GrpX ? 'x' : '-');
 	printf(" ");
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char *argv[]) 
 {
 	int i, l = 0;
 
@@ -171,5 +168,5 @@ main(int argc, char *argv[])
 		else
 			ls(argv[i]);
 	}
-	exit(1);
-}
+	exit(1);  
+}  
