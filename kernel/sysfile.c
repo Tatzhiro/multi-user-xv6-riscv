@@ -328,26 +328,18 @@ sys_open(void)
   }
 
   char permission = ip -> permission;
-
-  if (omode == O_RDWR) {
+  
+  if (omode & O_RDWR) {
 		if (p->uid == ip->owner_uid) {
-			if (!(permission & OwnR) || !(permission & OwnW))
-				invalid = 1;
+      if (!(permission & (OwnR | OwnW)))
+        invalid = 1;
 		}
 		else{
-			if (!(permission & GrpR) || !(permission & GrpW))
+			if (!(permission & (GrpR | GrpW)))
 				invalid = 1;
 		}
-	} else if (omode == O_RDONLY) {
-		if (p->uid == ip->owner_uid) {
-			if (!(permission & OwnR))
-				invalid = 1;
-		}
-		else{
-			if (!(permission & GrpR))
-				invalid = 1;
-		}
-	} else if (omode == O_WRONLY) {
+	} 
+  else if (omode & O_WRONLY) {
 		if (p->uid == ip->owner_uid) {
 			if (!(permission & OwnW))
 				invalid = 1;
@@ -357,6 +349,16 @@ sys_open(void)
 				invalid = 1;
 		}
 	}
+  else {
+		if (p->uid == ip->owner_uid) {
+			if (!(permission & OwnR))
+				invalid = 1;
+		}
+		else{
+			if (!(permission & GrpR))
+				invalid = 1;
+		}
+	} 
 
   // If we're root, invalid is not important
 	invalid = p->uid == 0 ? 0 : invalid;
