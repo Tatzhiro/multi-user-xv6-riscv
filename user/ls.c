@@ -3,83 +3,170 @@
 #include "user/user.h"
 #include "kernel/fs.h"
 
+#define OwnR (32)
+#define OwnW (16)
+#define OwnX (8)
+#define GrpR (4)
+#define GrpW (2)
+#define GrpX (1)
+
+void printperm(int mode, int dir);
+
 char*
 fmtname(char *path)
 {
-  static char buf[DIRSIZ+1];
-  char *p;
+	static char buf[DIRSIZ+1];
+	char *p;
 
-  // Find first character after last slash.
-  for(p=path+strlen(path); p >= path && *p != '/'; p--)
-    ;
-  p++;
+	// Find first character after last slash.
+	for(p=path+strlen(path); p >= path && *p != '/'; p--)
+		;
+	p++;
 
-  // Return blank-padded name.
-  if(strlen(p) >= DIRSIZ)
-    return p;
-  memmove(buf, p, strlen(p));
-  memset(buf+strlen(p), ' ', DIRSIZ-strlen(p));
-  return buf;
+	// Return blank-padded name.
+	if(strlen(p) >= DIRSIZ)
+		return p;
+	memmove(buf, p, strlen(p));
+	memset(buf+strlen(p), ' ', DIRSIZ-strlen(p));
+	return buf;
 }
 
 void
 ls(char *path)
+{ 
+	char buf[512], *p;
+	int fd;
+	struct dirent de;
+	struct stat st;
+
+	if((fd = open(path, 0)) < 0){
+		fprintf(2, "ls: cannot open %s\n", path);
+		return; 
+	}
+
+	if(fstat(fd, &st) < 0){
+		fprintf(2, "ls: cannot stat %s\n", path);
+		close(fd);
+		return;
+	}
+
+	switch(st.type){
+	case T_FILE:
+		printf("%s %d %d %d\n", fmtname(path), st.type, st.ino, st.size);
+		break;
+
+	case T_DIR:
+		if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
+			printf("ls: path too long\n");
+			break;
+		}
+		strcpy(buf, path);
+		p = buf+strlen(buf);
+		*p++ = '/';
+		while(read(fd, &de, sizeof(de)) == sizeof(de)){ 
+			if(de.inum == 0)
+				continue;
+			memmove(p, de.name, DIRSIZ); 
+			p[DIRSIZ] = 0;
+			if(stat(buf, &st) < 0){
+				printf("ls: cannot stat %s\n", buf);
+				continue;
+			}
+			printf("%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
+		}
+		break;
+	}
+	close(fd);
+}
+
+void
+lsl(char *path)
 {
-  char buf[512], *p;
-  int fd;
-  struct dirent de;
-  struct stat st;
+	char buf[512], *p;
+	int fd;
+	struct dirent de;
+	struct stat st;
 
-  if((fd = open(path, 0)) < 0){
-    fprintf(2, "ls: cannot open %s\n", path);
-    return;
-  }
+	if((fd = open(path, 0)) < 0){
+		fprintf(2, "ls: cannot open %s\n", path);
+		return;
+	}
 
-  if(fstat(fd, &st) < 0){
-    fprintf(2, "ls: cannot stat %s\n", path);
-    close(fd);
-    return;
-  }
+	if(fstat(fd, &st) < 0){
+		fprintf(2, "ls: cannot stat %s\n", path);
+		close(fd);
+		return;
+	}
 
-  switch(st.type){
-  case T_FILE:
-    printf("%s %d %d %l\n", fmtname(path), st.type, st.ino, st.size);
-    break;
+	switch(st.type){
+	case T_FILE:
+		printperm(st.permission, st.type == T_DIR);
+		printf("%d %s %d %d %d\n", st.owner_uid, fmtname(path), st.type, st.ino, st.size); //usernameでなくてもuidでもいいかも
+		break;
 
-  case T_DIR:
-    if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
-      printf("ls: path too long\n");
-      break;
-    }
-    strcpy(buf, path);
-    p = buf+strlen(buf);
-    *p++ = '/';
-    while(read(fd, &de, sizeof(de)) == sizeof(de)){
-      if(de.inum == 0)
-        continue;
-      memmove(p, de.name, DIRSIZ);
-      p[DIRSIZ] = 0;
-      if(stat(buf, &st) < 0){
-        //printf("ls: cannot stat %s\n", buf);
-        continue;
-      }
-      printf("%s %d %d %d\n", fmtname(buf), st.type, st.ino, st.size);
-    }
-    break;
-  }
-  close(fd);
+	case T_DIR:
+		if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
+			printf("ls: path too long\n");
+			break;
+		}
+		strcpy(buf, path);
+		p = buf+strlen(buf);
+		*p++ = '/';
+		while(read(fd, &de, sizeof(de)) == sizeof(de)){
+			if(de.inum == 0)
+				continue;
+			memmove(p, de.name, DIRSIZ);
+			p[DIRSIZ] = 0;
+			if(stat(buf, &st) < 0){
+				printf("ls: cannot stat %s\n", buf);
+				continue;
+			}
+
+			printperm(st.permission, st.type == T_DIR);
+			printf("%d %s %d %d %d\n", st.owner_uid, fmtname(buf), st.type, st.ino, st.size);
+		}
+		break;
+	}
+	close(fd);
+}
+
+void
+printperm(int permission, int dir)  
+{
+	
+	
+
+	printf("%c", dir ? 'd' : '-');
+	printf("%c", permission & OwnR ? 'r' : '-');
+	printf("%c", permission & OwnW ? 'w' : '-');
+	printf("%c", permission & OwnX ? 'x' : '-');
+	printf("%c", permission & GrpR ? 'r' : '-');
+	printf("%c", permission & GrpW ? 'w' : '-');
+	printf("%c", permission & GrpX ? 'x' : '-');
+	printf(" ");
 }
 
 int
-main(int argc, char *argv[])
+main(int argc, char *argv[]) 
 {
-  int i;
+	int i, l = 0;
 
-  if(argc < 2){
-    ls(".");
-    exit(0);
-  }
-  for(i=1; i<argc; i++)
-    ls(argv[i]);
-  exit(0);
-}
+	if(argc < 2){
+		ls(".");
+		exit(0);
+	} else if (argc == 2 && strstr(argv[1], "-l") != 0) {
+		lsl(".");
+		exit(0);
+	}
+
+	if (strstr(argv[1], "-l") != 0)
+		l = 1;
+
+	for(i= l ? 2 : 1; i < argc; i ++) {
+		if (l)
+			lsl(argv[i]);
+		else
+			ls(argv[i]);
+	}
+	exit(1);  
+}  

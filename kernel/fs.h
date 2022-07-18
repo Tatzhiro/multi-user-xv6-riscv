@@ -43,7 +43,6 @@ struct dinode_padding {
   int padding_12;
   int padding_13;
   int padding_14;
-  int padding_15;
 };
 
 // On-disk inode structure
@@ -55,6 +54,7 @@ struct dinode {
   uint size;            // Size of file (bytes)
   uint addrs[NDIRECT+1];   // Data block addresses
   int owner_uid;
+  int permission;
   struct dinode_padding garbage;
 };
 
@@ -77,4 +77,3 @@ struct dirent {
   ushort inum;
   char name[DIRSIZ];
 };
-

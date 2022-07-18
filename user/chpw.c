@@ -65,7 +65,6 @@ int main(void) {
             write(fd, "", 1);
         }
         close(fd);
-        cps();
         exit(0);
     }
     else {

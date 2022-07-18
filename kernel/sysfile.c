@@ -266,6 +266,11 @@ create(char *path, short type, short major, short minor)
   ip->minor = minor;
   ip->nlink = 1;
   ip->owner_uid = myproc()->uid;
+  if (strncmp(path, "Passwords", 9) == 0)
+    ip->permission = OwnR | OwnW | OwnX ;
+  else
+    ip->permission = OwnR | OwnW | OwnX | GrpR | GrpX;
+
   iupdate(ip);
 
   if(type == T_DIR){  // Create . and .. entries.
@@ -284,6 +289,7 @@ create(char *path, short type, short major, short minor)
   return ip;
 }
 
+
 uint64
 sys_open(void)
 {
@@ -292,6 +298,10 @@ sys_open(void)
   struct file *f;
   struct inode *ip;
   int n;
+	int invalid = 0;
+
+
+  struct proc *p = myproc();
 
   if((n = argstr(0, path, MAXPATH)) < 0 || argint(1, &omode) < 0)
     return -1;
@@ -310,17 +320,6 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
-    if(strncmp(path, ".", 2) != 0 && ip->owner_uid != myproc()->uid) {
-      /*
-      if(strncmp(path, "console", 8) != 0) {
-        printf("owner_uid = %d\n", ip->owner_uid);
-        printf("my_uid    = %d\n", myproc()->uid);
-      }
-      */
-      iunlockput(ip);
-      end_op();
-      return -1;
-    }
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
       end_op();
@@ -328,19 +327,64 @@ sys_open(void)
     }
   }
 
+  char permission = ip -> permission;
+  
+  if (omode & O_RDWR) {
+		if (p->uid == ip->owner_uid) {
+      if (!(permission & (OwnR | OwnW)))
+        invalid = 1;
+		}
+		else{
+			if (!(permission & (GrpR | GrpW)))
+				invalid = 1;
+		}
+	} 
+  else if (omode & O_WRONLY) {
+		if (p->uid == ip->owner_uid) {
+			if (!(permission & OwnW))
+				invalid = 1;
+		}
+		else {
+			if (!(permission & GrpW))
+				invalid = 1;
+		}
+	}
+  else {
+		if (p->uid == ip->owner_uid) {
+			if (!(permission & OwnR))
+				invalid = 1;
+		}
+		else{
+			if (!(permission & GrpR))
+				invalid = 1;
+		}
+	} 
+
+  // If we're root, invalid is not important
+	invalid = p->uid == 0 ? 0 : invalid;
+
+	if (invalid) {
+		printf("%s: Permission denied\n", path);
+		iunlockput(ip);
+		end_op();
+		return -1;
+	}
+
+	if((f = filealloc()) == 0 || (fd = fdalloc(f)) < 0){
+		if(f)
+			fileclose(f);
+
+		iunlockput(ip);
+		end_op();
+		return -1;
+	}
+
   if(ip->type == T_DEVICE && (ip->major < 0 || ip->major >= NDEV)){
     iunlockput(ip);
     end_op();
     return -1;
   }
 
-  if((f = filealloc()) == 0 || (fd = fdalloc(f)) < 0){
-    if(f)
-      fileclose(f);
-    iunlockput(ip);
-    end_op();
-    return -1;
-  }
 
   if(ip->type == T_DEVICE){
     f->type = FD_DEVICE;
@@ -405,7 +449,7 @@ sys_chdir(void)
   char path[MAXPATH];
   struct inode *ip;
   struct proc *p = myproc();
-  
+
   begin_op();
   if(argstr(0, path, MAXPATH) < 0 || (ip = namei(path)) == 0){
     end_op();
